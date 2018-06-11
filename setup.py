@@ -17,7 +17,7 @@ DESCRIPTION = "Communicate with the Spotify's web helper process to control some
 URL = "https://github.com/erinxocon/spotify-local-control"
 EMAIL = "erinocon5@gmail.com"
 AUTHOR = "Erin O'Connell"
-VERSION = "0.1.2"
+VERSION = "0.1.3"
 
 # What packages are required for this module to be executed?
 REQUIRED = ["requests", "keyboard"]
@@ -83,7 +83,7 @@ setup(
     url=URL,
     python_requires=">=3.6.0",
     # If your package is a single module, use this instead of 'packages':
-    py_modules=["spotify_local"],
+    packages=["spotify_local"],
     # entry_points={
     #     'console_scripts': ['mycli=mymodule:cli'],
     # },

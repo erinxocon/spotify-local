@@ -1,3 +1,5 @@
+import asyncio
+
 import keyboard
 
 from random import choices
@@ -17,6 +19,17 @@ class SpotifyLocal:
         self._port: int = 4381
         self._oauth_token: str
         self._csrf_token: str
+        self._loop = asyncio.get_event_loop()
+
+    def __enter__(self):
+        self._oauth_token = self._get_oauth_token()
+        self._csrf_token = self._get_csrf_token()
+        # self._loop.run_forever()
+        return self
+
+    def __exit__(self, *args):
+        # self._loop.close()
+        pass
 
     def _get_url(self, url: str) -> str:
         sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
@@ -35,10 +48,6 @@ class SpotifyLocal:
         url: str = self._get_url("/simplecsrf/token.json")
         r = self._make_request(url=url)
         return r.json()["token"]
-
-    def connect(self) -> None:
-        self._oauth_token = self._get_oauth_token()
-        self._csrf_token = self._get_csrf_token()
 
     @property
     def version(self) -> Mapping[str, Union[int, str]]:
@@ -62,7 +71,7 @@ class SpotifyLocal:
         }
         self._make_request(url=url, params=params)
 
-    def play(self) -> None:
+    def unpause(self) -> None:
         self.pause(pause=False)
 
     def playURI(self, uri: str) -> Mapping:

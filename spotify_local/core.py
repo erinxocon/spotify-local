@@ -1,4 +1,4 @@
-import asyncio
+from threading import Thread
 
 import keyboard
 
@@ -7,6 +7,8 @@ from string import ascii_lowercase
 from typing import Dict, Union, Mapping
 
 from requests import session, Response, Session
+
+from .models.FlatStatus import FlatStatus
 
 # define types
 _KEYVALUE = Mapping[str, Union[object, str]]
@@ -19,16 +21,14 @@ class SpotifyLocal:
         self._port: int = 4381
         self._oauth_token: str
         self._csrf_token: str
-        self._loop = asyncio.get_event_loop()
+        self._flat_status = FlatStatus()
 
     def __enter__(self):
         self._oauth_token = self._get_oauth_token()
         self._csrf_token = self._get_csrf_token()
-        # self._loop.run_forever()
         return self
 
     def __exit__(self, *args):
-        # self._loop.close()
         pass
 
     def _get_url(self, url: str) -> str:
@@ -50,7 +50,7 @@ class SpotifyLocal:
         return r.json()["token"]
 
     @property
-    def version(self) -> Mapping[str, Union[int, str]]:
+    def version(self):
         url: str = self._get_url("/service/version.json")
         params = {"service": "remote"}
         r = self._make_request(url=url, params=params)
@@ -90,3 +90,7 @@ class SpotifyLocal:
 
     def previous(self) -> None:
         keyboard.send("previous track")
+
+    @property
+    def artist(self):
+        return self._status.artist

@@ -19,37 +19,19 @@ class SpotipyLocal:
         self.session: Session = session()
         self._origin: _KEYVALUE = {"Origin": "https://open.spotify.com"}
         self._port: int = 4381
-        self._status: Mapping = None
         self._oauth_token: str
         self._csrf_token: str
 
-    @property
-    def port(self) -> int:
-        """Default port that spotify web helper services binds too"""
-        return self._port
-
-    @property
-    def origin(self) -> _KEYVALUE:
-        """Returns the Origin Header for the spotiy api"""
-        return self._origin
-
     def _get_url(self, url: str) -> str:
         sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
-        return "http://{0}:{1}{2}".format(sub, self.port, url)
+        return "http://{0}:{1}{2}".format(sub, self._port, url)
 
     def _make_request(self, url: str, params: Dict = {}) -> Response:
-        r: Response = self.session.get(url=url, params=params, headers=self.origin)
+        r: Response = self.session.get(url=url, params=params, headers=self._origin)
         return r
 
-    @property
-    def version(self) -> Mapping[str, Union[int, str]]:
-        url: str = self._get_url("/service/version.json")
-        params = {"service": "remote"}
-        r = self._make_request(url=url, params=params)
-        return r.json()
-
     def _get_oauth_token(self) -> str:
-        url: str = "{0}/token".format(self.origin["Origin"])
+        url: str = "{0}/token".format(self._origin["Origin"])
         r: Response = self.session.get(url=url)
         return r.json()["t"]
 
@@ -61,6 +43,13 @@ class SpotipyLocal:
     def connect(self) -> None:
         self._oauth_token = self._get_oauth_token()
         self._csrf_token = self._get_csrf_token()
+
+    @property
+    def version(self) -> Mapping[str, Union[int, str]]:
+        url: str = self._get_url("/service/version.json")
+        params = {"service": "remote"}
+        r = self._make_request(url=url, params=params)
+        return r.json()
 
     def get_status(self) -> Mapping:
         url: str = self._get_url("/remote/status.json")

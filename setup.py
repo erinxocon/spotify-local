@@ -17,10 +17,10 @@ DESCRIPTION = "Communicate with the Spotify's web helper process to control some
 URL = "https://github.com/erinxocon/spotify-local-control"
 EMAIL = "erinocon5@gmail.com"
 AUTHOR = "Erin O'Connell"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 # What packages are required for this module to be executed?
-REQUIRED = ["requests"]
+REQUIRED = ["requests", "keyboard"]
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
@@ -60,9 +60,7 @@ class UploadCommand(Command):
             pass
 
         self.status("Building Source and Wheel (universal) distribution…")
-        os.system(
-            "{0} setup.py sdist bdist_wheel --universal".format(sys.executable)
-        )
+        os.system("{0} setup.py sdist bdist_wheel --universal".format(sys.executable))
 
         self.status("Uploading the package to PyPi via Twine…")
         os.system("twine upload dist/*")

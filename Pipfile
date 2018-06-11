@@ -10,8 +10,8 @@ keyboard = "*"
 [dev-packages]
 mypy = "*"
 rope = "*"
-black = "*"
-ipython = "*"
+twine = "*"
+white = "*"
 
 [requires]
 python_version = "3.6"

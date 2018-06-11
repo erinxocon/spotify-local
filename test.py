@@ -1,10 +1,7 @@
+from pprint import pprint
 from spotify_local import SpotifyLocal
 
 
-def v():
-    with SpotifyLocal() as s:
-        print(s.version)
-
-
 if __name__ == "__main__":
-    v()
+    with SpotifyLocal() as s:
+        pprint(s.get_current_status())

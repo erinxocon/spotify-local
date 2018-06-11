@@ -5,11 +5,13 @@ name = "pypi"
 
 [packages]
 requests = "*"
+keyboard = "*"
 
 [dev-packages]
 mypy = "*"
 rope = "*"
 black = "*"
+ipython = "*"
 
 [requires]
 python_version = "3.6"

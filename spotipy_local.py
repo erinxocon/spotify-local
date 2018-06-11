@@ -2,7 +2,7 @@ import keyboard
 
 from random import choices
 from string import ascii_lowercase
-from typing import Dict, Union, List, Any, Optional, Mapping
+from typing import Dict, Union, Mapping
 
 from requests import session, Response, Session
 

@@ -17,7 +17,7 @@ DESCRIPTION = "Communicate with the Spotify's web helper process to control some
 URL = "https://github.com/erinxocon/spotify-local-control"
 EMAIL = "erinocon5@gmail.com"
 AUTHOR = "Erin O'Connell"
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 # What packages are required for this module to be executed?
 REQUIRED = ["requests", "keyboard"]

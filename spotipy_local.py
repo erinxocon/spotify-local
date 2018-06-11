@@ -10,7 +10,7 @@ from requests import session, Response, Session
 _KEYVALUE = Mapping[str, Union[object, str]]
 
 
-class SpotipyLocal:
+class SpotifyLocal:
     def __init__(self) -> None:
         self.session: Session = session()
         self._origin: _KEYVALUE = {"Origin": "https://open.spotify.com"}
@@ -19,15 +19,11 @@ class SpotipyLocal:
         self._csrf_token: str
 
     def _get_url(self, url: str) -> str:
-        sub = "{0}.spotilocal.com".format(
-            "".join(choices(ascii_lowercase, k=10))
-        )
+        sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
         return "http://{0}:{1}{2}".format(sub, self._port, url)
 
     def _make_request(self, url: str, params: Dict = {}) -> Response:
-        r: Response = self.session.get(
-            url=url, params=params, headers=self._origin
-        )
+        r: Response = self.session.get(url=url, params=params, headers=self._origin)
         return r
 
     def _get_oauth_token(self) -> str:
@@ -66,7 +62,7 @@ class SpotipyLocal:
         }
         self._make_request(url=url, params=params)
 
-    def unpause(self) -> None:
+    def play(self) -> None:
         self.pause(pause=False)
 
     def playURI(self, uri: str) -> Mapping:
@@ -80,8 +76,8 @@ class SpotipyLocal:
         r = self._make_request(url=url, params=params)
         return r.json()
 
-    def skip(self):
+    def skip(self) -> None:
         keyboard.send("next track")
 
-    def previous(self):
+    def previous(self) -> None:
         keyboard.send("previous track")

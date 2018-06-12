@@ -6,8 +6,8 @@ name = "pypi"
 [packages]
 requests = "*"
 keyboard = "*"
-"spotify_local" = {path = ".", editable = true}
 trio = "*"
+spotify-local-control = {path = ".", editable = true}
 
 [dev-packages]
 mypy = "*"

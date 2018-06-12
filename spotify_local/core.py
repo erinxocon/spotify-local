@@ -1,14 +1,13 @@
-from threading import Thread
-
 import keyboard
 
 from random import choices
 from string import ascii_lowercase
-from typing import Dict, Union, Mapping
+from typing import Dict, Union, Mapping, Callable, Optional
+from multiprocessing import Process, queues, get_context
 
 from requests import session, Response, Session
 
-from .models.FlatStatus import FlatStatus
+from .events import UpdateStatus
 
 # define types
 _KEYVALUE = Mapping[str, Union[object, str]]
@@ -21,7 +20,7 @@ class SpotifyLocal:
         self._port: int = 4381
         self._oauth_token: str
         self._csrf_token: str
-        self._flat_status = FlatStatus()
+        self._process: Optional[Process] = None
 
     def __enter__(self):
         self._oauth_token = self._get_oauth_token()
@@ -29,7 +28,8 @@ class SpotifyLocal:
         return self
 
     def __exit__(self, *args):
-        pass
+        if self._process is not None:
+            self._process.join()
 
     def _get_url(self, url: str) -> str:
         sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
@@ -91,6 +91,11 @@ class SpotifyLocal:
     def previous(self) -> None:
         keyboard.send("previous track")
 
-    @property
-    def artist(self):
-        return self._status.artist
+    def on_track_change(self, callback: Callable) -> None:
+        url: str = self._get_url("/remote/status.json")
+        params = {"oauth": self._oauth_token, "csrf": self._csrf_token}
+        self._process = UpdateStatus(
+            callback=callback, params=params, headers=self._origin, url=url
+        )
+        self._process.start()
+

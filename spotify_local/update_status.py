@@ -3,16 +3,18 @@ import requests
 from multiprocessing import Process, queues
 from typing import Callable, Mapping, Union
 
+from .event import Event
+
 
 class UpdateStatus(Process):
     def __init__(
-        self, callback: Callable, params: Mapping, headers: Mapping, url: str
+        self, handlers: Event, params: Mapping, headers: Mapping, url: str
     ) -> None:
-        self.callback = callback
         self.params = params
         self.headers = headers
         self.url = url
         self.session = requests.Session()
+        self.handlers = handlers
         super(UpdateStatus, self).__init__()
 
     def run(self):
@@ -23,5 +25,4 @@ class UpdateStatus(Process):
                 url=self.url, params=self.params, headers=self.headers
             )
             j = r.json()
-            self.callback(j)
-
+            self.handlers(j)

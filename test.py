@@ -8,4 +8,5 @@ def test(new_status):
 
 if __name__ == "__main__":
     with SpotifyLocal() as s:
-        s.on_track_change(callback=test)
+        s.on_change_status += test
+        s.listen_for_events()

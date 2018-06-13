@@ -7,7 +7,8 @@ from multiprocessing import Process, queues, get_context
 
 from requests import session, Response, Session
 
-from .events import UpdateStatus
+from .event import Event
+from .update_status import UpdateStatus
 
 # define types
 _KEYVALUE = Mapping[str, Union[object, str]]
@@ -21,6 +22,7 @@ class SpotifyLocal:
         self._oauth_token: str
         self._csrf_token: str
         self._process: Optional[Process] = None
+        self.on_change_status: Event = Event()
 
     def __enter__(self):
         self._oauth_token = self._get_oauth_token()
@@ -91,11 +93,11 @@ class SpotifyLocal:
     def previous(self) -> None:
         keyboard.send("previous track")
 
-    def on_track_change(self, callback: Callable) -> None:
+    def listen_for_events(self) -> None:
         url: str = self._get_url("/remote/status.json")
         params = {"oauth": self._oauth_token, "csrf": self._csrf_token}
         self._process = UpdateStatus(
-            callback=callback, params=params, headers=self._origin, url=url
+            handlers=self.on_change_status, params=params, headers=self._origin, url=url
         )
         self._process.start()
 

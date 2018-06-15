@@ -6,16 +6,17 @@ name = "pypi"
 [packages]
 requests = "*"
 keyboard = "*"
-spotify-local-control = {path = ".", editable = true}
 pyobjc-framework-Quartz = {version="*", markers="sys_platform == 'dawrin'"}
 
 [dev-packages]
+spotify-local-control = {path = ".", editable = true}
 mypy = "*"
 rope = "*"
 twine = "*"
 white = "*"
 sphinx = "*"
 pytest = "*"
+towncrier = "*"
 
 [requires]
 python_version = "3.6"

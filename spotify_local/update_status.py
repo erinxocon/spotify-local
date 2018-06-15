@@ -18,10 +18,19 @@ class UpdateStatus(Process):
         self.session: requests.Session = requests.Session()
         self.handlers: Event = handlers
         self.wait: int = wait
+        self._should_run = True
         super(UpdateStatus, self).__init__()
 
+    @property
+    def should_run(self) -> bool:
+        return self._should_run
+
+    @should_run.setter
+    def should_run(self, val: bool) -> None:
+        self._should_run = val
+
     def run(self) -> None:
-        while True:
+        while self.should_run:
             self.params["returnon"] = "login,logout,play,pause,error,ap"
             self.params["returnafter"] = str(self.wait)
             r: requests.Response = self.session.get(

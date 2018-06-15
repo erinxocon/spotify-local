@@ -15,6 +15,7 @@ rope = "*"
 twine = "*"
 white = "*"
 sphinx = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.6"

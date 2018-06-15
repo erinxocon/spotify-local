@@ -43,7 +43,7 @@ class SpotifyLocal:
         self._connected: bool = False
         self._oauth_token: str
         self._csrf_token: str
-        self._process: Optional[Process] = None
+        self._process: Optional[UpdateStatus] = None
         self.on_status_change: Event = Event()
 
     def __enter__(self):
@@ -53,22 +53,11 @@ class SpotifyLocal:
     def __exit__(self, *args):
         self.disconnect()
 
-    def connect(self) -> None:
-        self._oauth_token = self._get_oauth_token()
-        self._csrf_token = self._get_csrf_token()
-        self._connected = True
-
-    def disconnect(self) -> None:
-        if self._process is not None:
-            self._process.join()
-        self._connected = False
-
     def _get_url(self, url: str) -> str:
         sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
         return "http://{0}:{1}{2}".format(sub, self._port, url)
 
     def _make_request(self, url: str, params: Dict = {}) -> Response:
-
         r: Response = self.session.get(url=url, params=params, headers=self._origin)
         return r
 
@@ -89,6 +78,17 @@ class SpotifyLocal:
             raise ConnectionError(
                 "Please either use with context, or call SpotifyLocal.connect() before calling this method."
             )
+
+    def connect(self) -> None:
+        self._oauth_token = self._get_oauth_token()
+        self._csrf_token = self._get_csrf_token()
+        self._connected = True
+
+    def disconnect(self) -> None:
+        if self._process is not None:
+            self._process.should_run = False
+            self._process.join()
+        self._connected = False
 
     @property
     def version(self):

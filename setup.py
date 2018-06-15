@@ -20,7 +20,7 @@ AUTHOR = "Erin O'Connell"
 VERSION = "0.2.1"
 
 # What packages are required for this module to be executed?
-REQUIRED = ["requests", "keyboard"]
+REQUIRED = ["requests", "keyboard", "pyobjc-framework-Quartz; sys.platform == 'darwin'"]
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------

@@ -7,9 +7,10 @@
 import io
 import os
 import sys
+import re
 from shutil import rmtree
 
-from setuptools import setup, Command
+from setuptools import setup, Command, find_packages
 
 # Package meta-data.
 NAME = "spotify-local-control"
@@ -17,7 +18,6 @@ DESCRIPTION = "Communicate with the Spotify's web helper process to control some
 URL = "https://github.com/erinxocon/spotify-local-control"
 EMAIL = "erinocon5@gmail.com"
 AUTHOR = "Erin O'Connell"
-VERSION = "0.2.2"
 
 # What packages are required for this module to be executed?
 REQUIRED = ["requests", "keyboard", "pyobjc-framework-Quartz; sys.platform == 'darwin'"]
@@ -33,6 +33,15 @@ here = os.path.abspath(os.path.dirname(__file__))
 # Note: this will only work if 'README.rst' is present in your MANIFEST.in file!
 with io.open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
     long_description = "\n" + f.read()
+
+
+def find_version(*file_paths):
+    with io.open(os.path.join(here, *file_paths), encoding="utf-8") as f:
+        version_file = f.read()
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]", version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 
 class UploadCommand(Command):
@@ -75,18 +84,15 @@ class UploadCommand(Command):
 # Where the magic happens:
 setup(
     name=NAME,
-    version=VERSION,
+    version=find_version("src", "spotify_local", "__init__.py"),
     description=DESCRIPTION,
     long_description=long_description,
     author=AUTHOR,
     author_email=EMAIL,
     url=URL,
     python_requires=">=3.6.0",
-    # If your package is a single module, use this instead of 'packages':
-    packages=["spotify_local"],
-    # entry_points={
-    #     'console_scripts': ['mycli=mymodule:cli'],
-    # },
+    package_dir={"": "src"},
+    packages=find_packages(where="src", exclude=["docs", "tests*"]),
     install_requires=REQUIRED,
     include_package_data=True,
     license="MIT",

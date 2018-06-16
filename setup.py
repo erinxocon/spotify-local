@@ -31,7 +31,7 @@ def find_version(*file_paths):
 
 
 # Package meta-data.
-NAME = "spotify-local-control"
+NAME = "spotify-local"
 DESCRIPTION = "Communicate with the Spotify's web helper process to control some basic aspects of spotify"
 URL = "https://github.com/erinxocon/spotify-local-control"
 EMAIL = "erinocon5@gmail.com"

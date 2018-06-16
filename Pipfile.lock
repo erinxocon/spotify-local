@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3d0d21d2a7551f3d0a93361ad86a654137e4c10f8de5f975d11e4b89affa5282"
+            "sha256": "3118b332bbce4dcc6389aa0edc22c5d1ff549fe78c90d37bcdba67508036ed56"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -271,7 +271,7 @@
             ],
             "version": "==1.1.0"
         },
-        "spotify-local-control": {
+        "spotify-local": {
             "editable": true,
             "path": "."
         },

@@ -9,7 +9,7 @@ keyboard = "*"
 pyobjc-framework-Quartz = {version="*", markers="sys_platform == 'dawrin'"}
 
 [dev-packages]
-spotify-local-control = {path = ".", editable = true}
+spotify-local = {path = ".", editable = true}
 mypy = "*"
 rope = "*"
 twine = "*"

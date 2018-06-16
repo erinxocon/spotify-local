@@ -76,3 +76,7 @@ Register a callback and listen for events:
 License
 =======
 MIT
+
+TODO
+====
+* Create an async verion of the spotify controller class

@@ -1,4 +1,7 @@
 class Event:
+
+    """Event listener/thrower thing."""
+
     def __init__(self):
         self.handlers = set()
 

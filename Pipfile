@@ -15,7 +15,6 @@ rope = "*"
 twine = "*"
 white = "*"
 sphinx = "*"
-pytest = "*"
 towncrier = "*"
 
 [requires]

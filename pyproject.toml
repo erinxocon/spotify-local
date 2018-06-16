@@ -1,8 +1,0 @@
-[tool.towncrier]
-package = "spotify_local"
-package_dir = "src"
-filename = "CHANGELOG.rst"
-directory = "news/"
-title_format = "{version} ({project_date})"
-template = "news/towncrier_template.rst"
-

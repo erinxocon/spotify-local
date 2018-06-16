@@ -1,6 +1,0 @@
-{
-    "python.pythonPath":
-        "C:\\Users\\erin\\.virtualenvs\\spotipy-local-Jy9ZZi5M\\Scripts\\python.exe",
-    "python.linting.pylintEnabled": false,
-    "python.formatting.provider": "black"
-}

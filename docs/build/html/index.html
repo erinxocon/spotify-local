@@ -1,0 +1,306 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spotify-Local-Control: A multi-platform API to control the local Spotify Client &#8212; spotify-local v0.2.3 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="spotify-local-control-a-multi-platform-api-to-control-the-local-spotify-client">
+<h1>Spotify-Local-Control: A multi-platform API to control the local Spotify Client<a class="headerlink" href="#spotify-local-control-a-multi-platform-api-to-control-the-local-spotify-client" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p><strong>Spotify-Local-Control</strong> library is designed to make controlling the Spotify client on your local machine possible!
+This is a wrapper for the web helper process which exposes a simple api.
+<strong>Spotify-Local-Control</strong> is inspired by <a class="reference external" href="https://github.com/JohnnyCrazy/SpotifyAPI-NET">SpotifyAPI-NET</a>.
+This library allows you to perform simple actions quickly, or listen to events and register callbacks when
+a song changes, or the pause button is pushed.</p>
+<p>When using this library you automatically get:</p>
+<ul class="simple">
+<li>The ability to play/pause the current song</li>
+<li>The ability to change tracks</li>
+<li>You can register callbacks and listen for events when the state of Spotify changes</li>
+<li>A nice context manager api using <cite>with</cite></li>
+</ul>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ pipenv install spotify-local-control
+</pre></div>
+</div>
+<p>Only <strong>Python 3.6</strong> is supported.</p>
+</div>
+<div class="section" id="tutorial-usage">
+<h1>Tutorial &amp; Usage<a class="headerlink" href="#tutorial-usage" title="Permalink to this headline">¶</a></h1>
+<p>Connect to the Spotify Client (Spotify must be open to do this):</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spotify_local</span> <span class="kn">import</span> <span class="n">SpotifyLocal</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">SpotifyLocal</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+<span class="go">        pass</span>
+</pre></div>
+</div>
+<p>Pause the Spotify Client:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">SpotifyLocal</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+<span class="go">        s.pause()</span>
+</pre></div>
+</div>
+<p>Grab the current state of the Spotify client, including now playing information:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">SpotifyLocal</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+<span class="go">        print(s.get_current_status())</span>
+</pre></div>
+</div>
+<p>Play a playlist, song, album, artist, etc using a Spotify uri link:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">SpotifyLocal</span><span class="p">()</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
+<span class="go">        s.playURI(&#39;spotify:track:0thLhIqWsqqycEqFONOyhu&#39;)</span>
+</pre></div>
+</div>
+<p>Register a callback and listen for events:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spotify_local</span> <span class="kn">import</span> <span class="n">SpotifyLocal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">SpotifyLocal</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">on_status_change</span> <span class="o">+=</span> <span class="n">test</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">listen_for_events</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s2">&quot;Do more stuff because that runs in the background&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="license">
+<h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
+<p>MIT</p>
+</div>
+<div class="section" id="api-documentation">
+<h1>API Documentation<a class="headerlink" href="#api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-spotify_local">
+<span id="main-classes"></span><h2>Main Classes<a class="headerlink" href="#module-spotify_local" title="Permalink to this headline">¶</a></h2>
+<p>These classes are the main interface to <code class="docutils literal notranslate"><span class="pre">spotify_local</span></code>:</p>
+<dl class="class">
+<dt id="spotify_local.SpotifyLocal">
+<em class="property">class </em><code class="descclassname">spotify_local.</code><code class="descname">SpotifyLocal</code><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal" title="Permalink to this definition">¶</a></dt>
+<dd><p>A basic controller for the local Spotify client.</p>
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.connect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register the oauth token, the csrf token, and set connected to true</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Join the process and set the connection to false.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.get_current_status">
+<code class="descname">get_current_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Mapping<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.get_current_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.get_current_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current state of the local spotify client</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.listen_for_events">
+<code class="descname">listen_for_events</code><span class="sig-paren">(</span><em>wait: int = 60</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.listen_for_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.listen_for_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Listen for events and call any associated callbacks when there is an event.
+This is a non-blocking operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.pause">
+<code class="descname">pause</code><span class="sig-paren">(</span><em>pause=True</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.pause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.pause" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pauses the spotify player</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pause</strong> – boolean value to choose the pause/play state</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.playURI">
+<code class="descname">playURI</code><span class="sig-paren">(</span><em>uri: str</em><span class="sig-paren">)</span> &#x2192; Mapping<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.playURI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.playURI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.previous">
+<code class="descname">previous</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.previous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.previous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes to the beginning of the track, or if called twice goes to the previous track.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.skip">
+<code class="descname">skip</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.skip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.skip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Skips the current song</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.unpause">
+<code class="descname">unpause</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.unpause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.unpause" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unpauses the player by calling pause()</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="spotify_local.SpotifyLocal.version">
+<code class="descname">version</code><a class="headerlink" href="#spotify_local.SpotifyLocal.version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Spotify version information</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><p>
+    <iframe src="https://ghbtns.com/github-btn.html?user=erinxocon&repo=spotify-local-control&type=watch&count=true&size=large"
+        allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+<p>
+    <strong>Spotify Local Control</strong> intends to make controlling the local spotify web helper as simple and intuitive as possible.
+</p>
+
+<h3>Stay Informed</h3>
+
+<p>
+    <iframe src="https://ghbtns.com/github-btn.html?user=erinxocon&type=follow&count=false" allowtransparency="true" frameborder="0"
+        scrolling="0" width="200" height="20"></iframe>
+</p>
+
+<p>
+    <a href="https://twitter.com/erinxocon" class="twitter-follow-button" data-show-count="false">Follow @kennethreitz</a>
+    <script>!function (d, s, id) { var js, fjs = d.getElementsByTagName(s)[0], p = /^http:/.test(d.location) ? 'http' : 'https'; if (!d.getElementById(id)) { js = d.createElement(s); js.id = id; js.src = p + '://platform.twitter.com/widgets.js'; fjs.parentNode.insertBefore(js, fjs); } }(document, 'script', 'twitter-wjs');</script>
+</p>
+<p>
+    <a href="https://saythanks.io/to/erinxocon">Say Thanks!</a>
+</p>
+
+<h3>Other Projects</h3>
+
+<p>More Erin O'Connell projects:</p>
+<ul>
+    <li>
+        <a href="http://pipenv.org/">pipenv</a>
+    </li>
+    <li>
+        <a href="https://github.com/erinxocon/tpfd">Text Parsing Function Dispatcher</a>
+    </li>
+    <li>
+        <a href="https://github.com/erinxocon/requests-xml">Requests-XML</a>
+    </li>
+</ul>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script><!-- Alabaster (krTheme++) Hacks -->
+
+
+<!-- CSS Adjustments (I'm very picky.) -->
+<style type="text/css">
+    /* Rezzy requires precise alignment. */
+
+    img.logo {
+        margin-left: -20px !important;
+    }
+
+    /* "Quick Search" should be capitalized. */
+
+    div#searchbox h3 {
+        text-transform: capitalize;
+    }
+
+    /* Make the document a little wider, less code is cut-off. */
+
+    div.document {
+        width: 1008px;
+    }
+
+    /* Much-improved spacing around code blocks. */
+
+    div.highlight pre {
+        padding: 11px 14px;
+    }
+
+    /* Remain Responsive! */
+
+    @media screen and (max-width: 1008px) {
+        div.sphinxsidebar {
+            display: none;
+        }
+        div.document {
+            width: 100% !important;
+        }
+
+        /* Have code blocks escape the document right-margin. */
+        div.highlight pre {
+            margin-right: -30px;
+        }
+    }
+</style>
+
+
+<!-- That was not a hack. That was art. -->
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018. An Erin O'Connell Project.
+      
+    </div>
+
+    
+    <a href="https://github.com/erinxocon/spotify-local-control" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>

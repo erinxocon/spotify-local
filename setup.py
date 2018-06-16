@@ -12,20 +12,6 @@ from shutil import rmtree
 
 from setuptools import setup, Command, find_packages
 
-# Package meta-data.
-NAME = "spotify-local-control"
-DESCRIPTION = "Communicate with the Spotify's web helper process to control some basic aspects of spotify"
-URL = "https://github.com/erinxocon/spotify-local-control"
-EMAIL = "erinocon5@gmail.com"
-AUTHOR = "Erin O'Connell"
-
-# What packages are required for this module to be executed?
-REQUIRED = ["requests", "keyboard", "pyobjc-framework-Quartz; sys.platform == 'darwin'"]
-
-# The rest you shouldn't have to touch too much :)
-# ------------------------------------------------
-# Except, perhaps the License and Trove Classifiers!
-# If you do change the License, remember to change the Trove Classifier for that!
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -42,6 +28,18 @@ def find_version(*file_paths):
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
+
+
+# Package meta-data.
+NAME = "spotify-local-control"
+DESCRIPTION = "Communicate with the Spotify's web helper process to control some basic aspects of spotify"
+URL = "https://github.com/erinxocon/spotify-local-control"
+EMAIL = "erinocon5@gmail.com"
+AUTHOR = "Erin O'Connell"
+VERSION = find_version("src", "spotify_local", "__init__.py")
+
+# What packages are required for this module to be executed?
+REQUIRED = ["requests", "keyboard", "pyobjc-framework-Quartz; sys.platform == 'darwin'"]
 
 
 class UploadCommand(Command):
@@ -84,7 +82,7 @@ class UploadCommand(Command):
 # Where the magic happens:
 setup(
     name=NAME,
-    version=find_version("src", "spotify_local", "__init__.py"),
+    version=VERSION,
     description=DESCRIPTION,
     long_description=long_description,
     author=AUTHOR,

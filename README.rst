@@ -64,8 +64,8 @@ Register a callback and listen for events:
 .. code-block:: pycon
 
     >>> from spotify_local import SpotifyLocal
-    >>> def test(new_status):
-    ...     print(new_status)
+    >>> def test(event):
+    ...     print(event)
     >>> s = SpotifyLocal()
     >>> s.connect()
     >>> s.on_status_change += test

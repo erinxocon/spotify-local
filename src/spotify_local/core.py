@@ -1,11 +1,16 @@
 import sys
+import asyncio
 
+import aiohttp
 import keyboard
 
 from random import choices
+from functools import partial
 from string import ascii_lowercase
-from typing import Dict, Union, Mapping, Callable, Optional
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures._base import TimeoutError
 from multiprocessing import Process, queues, get_context
+from typing import Dict, Union, Mapping, Callable, Optional
 
 from requests import session, Response, Session
 
@@ -16,11 +21,63 @@ try:
     assert sys.version_info.major == 3
     assert sys.version_info.minor > 5
 except AssertionError:
-    raise RuntimeError("Spotify-Local-Control requires Python 3.6+!")
+    raise RuntimeError("Spotify-Local requires Python 3.6+!")
 
 
 DEFAULT_ORIGIN: Dict = {"Origin": "https://open.spotify.com"}
 DEFAULT_PORT: int = 4381
+
+
+def get_url(url: str) -> str:
+    """Ranomdly generates a url for use in requests.
+    Generates a hostname with the port and the provided suffix url provided
+    :param url: A url fragment to use in the creation of the master url
+    """
+    sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
+    return "http://{0}:{1}{2}".format(sub, DEFAULT_PORT, url)
+
+
+class SpotifyLocalAsync:
+    """A basic async controller for the local spotify client."""
+
+    def __init__(self, loop=None, workers=None) -> None:
+        """ Set or create an event loop and a thread pool.
+            :param loop: Asyncio lopp to use.
+            :param workers: Amount of threads to use for executing async calls.
+                If not pass it will default to the number of processors on the
+                machine, multiplied by 5.
+        """
+        self._origin: Dict = DEFAULT_ORIGIN
+        self._loop = loop or asyncio.get_event_loop()
+        self._session = aiohttp.ClientSession()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.disconnect()
+
+    async def request(self, url: str):
+        headers = self._origin
+        async with self._session.get(url, headers=headers) as r:
+            return await r.json()
+
+    async def _get_oauth_token(self):
+        """Retrieve a simple OAuth Token for use with the local http client."""
+        url: str = "{0}/token".format(self._origin["Origin"])
+        print(url)
+        r = await self.request(url=url)
+        return r["t"]
+
+    async def _get_csrf_token(self) -> str:
+        """Retrieve a simple csrf token for to prevent cross site request forgery."""
+        url: str = get_url("/simplecsrf/token.json")
+        print(url)
+        r = await self.request(url=url)
+        return r
+
+    async def disconnect(self) -> None:
+        await self._session.close()
 
 
 class SpotifyLocal:
@@ -29,7 +86,6 @@ class SpotifyLocal:
     __slots__ = [
         "session",
         "_origin",
-        "_port",
         "_connected",
         "_oauth_token",
         "_csrf_token",
@@ -38,9 +94,8 @@ class SpotifyLocal:
     ]
 
     def __init__(self) -> None:
-        self.session: Session = session()
+        self._session: Session = session()
         self._origin: Dict = DEFAULT_ORIGIN
-        self._port: int = DEFAULT_PORT
         self._connected: bool = False
         self._oauth_token: str
         self._csrf_token: str
@@ -52,38 +107,26 @@ class SpotifyLocal:
         return self
 
     def __exit__(self, *args):
-        self.session.close()
+        self._session.close()
         self.disconnect()
 
-    def _get_url(self, url: str) -> str:
-        """Ranomdly generates a url for use in requests.
-        Generates a hostname with the port and the provided suffix url provided
-
-        :param url: A url fragment to use in the creation of the master url
-
-        """
-        sub = "{0}.spotilocal.com".format("".join(choices(ascii_lowercase, k=10)))
-        return "http://{0}:{1}{2}".format(sub, self._port, url)
-
-    def _make_request(self, url: str, params: Dict = {}) -> Response:
+    def _request(self, url: str, params: Dict = {}) -> Response:
         """Makes a request using the currently open session.
-
         :param url: A url fragment to use in the creation of the master url
-
         """
-        r: Response = self.session.get(url=url, params=params, headers=self._origin)
+        r: Response = self._session.get(url=url, params=params, headers=self._origin)
         return r
 
     def _get_oauth_token(self) -> str:
         """Retrieve a simple OAuth Token for use with the local http client."""
         url: str = "{0}/token".format(self._origin["Origin"])
-        r: Response = self.session.get(url=url)
+        r: Response = self._session.get(url=url)
         return r.json()["t"]
 
     def _get_csrf_token(self) -> str:
         """Retrieve a simple csrf token for to prevent cross site request forgery."""
-        url: str = self._get_url("/simplecsrf/token.json")
-        r = self._make_request(url=url)
+        url: str = get_url("/simplecsrf/token.json")
+        r = self._request(url=url)
         return r.json()["token"]
 
     def _check_if_connected(self) -> None:
@@ -111,33 +154,31 @@ class SpotifyLocal:
     @property
     def version(self):
         """Spotify version information"""
-        url: str = self._get_url("/service/version.json")
+        url: str = get_url("/service/version.json")
         params = {"service": "remote"}
-        r = self._make_request(url=url, params=params)
+        r = self._request(url=url, params=params)
         return r.json()
 
     def get_current_status(self) -> Mapping:
         """Returns the current state of the local spotify client"""
         self._check_if_connected()
-        url: str = self._get_url("/remote/status.json")
+        url: str = get_url("/remote/status.json")
         params = {"oauth": self._oauth_token, "csrf": self._csrf_token}
-        r = self._make_request(url=url, params=params)
+        r = self._request(url=url, params=params)
         return r.json()
 
     def pause(self, pause=True) -> None:
         """Pauses the spotify player
-
         :param pause: boolean value to choose the pause/play state
-
         """
         self._check_if_connected()
-        url: str = self._get_url("/remote/pause.json")
+        url: str = get_url("/remote/pause.json")
         params = {
             "oauth": self._oauth_token,
             "csrf": self._csrf_token,
             "pause": "true" if pause else "false",
         }
-        self._make_request(url=url, params=params)
+        self._request(url=url, params=params)
 
     def unpause(self) -> None:
         """Unpauses the player by calling pause()"""
@@ -146,14 +187,14 @@ class SpotifyLocal:
     def playURI(self, uri: str) -> Mapping:
         """Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K"""
         self._check_if_connected()
-        url: str = self._get_url("/remote/play.json")
+        url: str = get_url("/remote/play.json")
         params = {
             "oauth": self._oauth_token,
             "csrf": self._csrf_token,
             "uri": uri,
             "context": uri,
         }
-        r = self._make_request(url=url, params=params)
+        r = self._request(url=url, params=params)
         return r.json()
 
     def skip(self) -> None:
@@ -175,7 +216,7 @@ class SpotifyLocal:
         This is a non-blocking operation.
         """
         self._check_if_connected()
-        url: str = self._get_url("/remote/status.json")
+        url: str = get_url("/remote/status.json")
         params: Dict = {"oauth": self._oauth_token, "csrf": self._csrf_token}
         self._process = UpdateStatus(
             handlers=self.on_status_change,

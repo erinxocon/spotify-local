@@ -1,14 +1,16 @@
-from pprint import pprint
-from spotify_local import SpotifyLocal
+import asyncio
+
+from spotify_local import SpotifyLocalAsync
 
 
-def test(new_status):
-    pprint(new_status)
+ioloop = asyncio.get_event_loop()
 
 
-if __name__ == "__main__":
-    with SpotifyLocal() as s:
-        # s.on_status_change += test
-        # s.listen_for_events()
-        pprint(s.get_current_status())
-        print("This should print out")
+async def test():
+    async with SpotifyLocalAsync(loop=ioloop, workers=5) as s:
+        print(await s._get_oauth_token())
+        print(await s._get_csrf_token())
+
+
+ioloop.run_until_complete(test())
+ioloop.close()

@@ -7,6 +7,7 @@ name = "pypi"
 requests = "*"
 keyboard = "*"
 pyobjc-framework-Quartz = {version="*", markers="sys_platform == 'dawrin'"}
+aiohttp = "*"
 
 [dev-packages]
 spotify-local = {path = ".", editable = true}
@@ -16,6 +17,8 @@ twine = "*"
 white = "*"
 sphinx = "*"
 towncrier = "*"
+cchardet = "*"
+aiodns = "*"
 
 [requires]
 python_version = "3.6"

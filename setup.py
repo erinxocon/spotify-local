@@ -39,7 +39,14 @@ AUTHOR = "Erin O'Connell"
 VERSION = find_version("src", "spotify_local", "__init__.py")
 
 # What packages are required for this module to be executed?
-REQUIRED = ["requests", "keyboard", "pyobjc-framework-Quartz; sys.platform == 'darwin'"]
+REQUIRED = [
+    "requests",
+    "keyboard",
+    "pyobjc-framework-Quartz; sys.platform == 'darwin'",
+    "aiohttp",
+]
+
+EXTRAS_REQUIRED = {"aio_speedup": ["cchardet", "aiodns"]}
 
 
 class UploadCommand(Command):
@@ -92,6 +99,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src", exclude=["docs", "tests*"]),
     install_requires=REQUIRED,
+    extras_require=EXTRAS_REQUIRED,
     include_package_data=True,
     license="MIT",
     classifiers=[

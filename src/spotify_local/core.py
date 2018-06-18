@@ -37,7 +37,16 @@ def get_url(url: str) -> str:
 class SpotifyLocalAsync:
     """A basic async controller for the local spotify client."""
 
-    def __init__(self, loop=None, workers=None) -> None:
+    __slots__ = [
+        "_origin",
+        "_connected",
+        "_oauth_token",
+        "_csrf_token",
+        "_loop",
+        "_session",
+    ]
+
+    def __init__(self, loop=None, sessoion=None, workers=None) -> None:
         """ Set or create an event loop and a thread pool.
             :param loop: Asyncio lopp to use.
             :param workers: Amount of threads to use for executing async calls.
@@ -46,7 +55,7 @@ class SpotifyLocalAsync:
         """
         self._origin: Dict = DEFAULT_ORIGIN
         self._loop = loop or asyncio.get_event_loop()
-        self._session = aiohttp.ClientSession()
+        self._session: aiohttp.ClientSession = session or aiohttp.ClientSession()
         self._oauth_token = ""
         self._csrf_token = ""
         self._connected = False
@@ -161,8 +170,8 @@ class SpotifyLocal:
         "on_status_change",
     ]
 
-    def __init__(self) -> None:
-        self._session: Session = session()
+    def __init__(self, session=None) -> None:
+        self._session: Session = session or session()
         self._origin: Dict = DEFAULT_ORIGIN
         self._connected: bool = False
         self._oauth_token: str

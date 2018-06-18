@@ -46,8 +46,6 @@ REQUIRED = [
     "aiohttp",
 ]
 
-EXTRAS_REQUIRED = {"aio_speedup": ["cchardet", "aiodns"]}
-
 
 class UploadCommand(Command):
     """Support setup.py upload."""
@@ -99,7 +97,6 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src", exclude=["docs", "tests*"]),
     install_requires=REQUIRED,
-    extras_require=EXTRAS_REQUIRED,
     include_package_data=True,
     license="MIT",
     classifiers=[

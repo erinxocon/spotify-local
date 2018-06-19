@@ -25,7 +25,7 @@ class SpotifyLocalAsync:
         "_session",
     ]
 
-    def __init__(self, loop=None, workers=None) -> None:
+    def __init__(self, loop=None) -> None:
         """ Set or create an event loop and a thread pool.
             :param loop: Asyncio lopp to use.
             :param workers: Amount of threads to use for executing async calls.
@@ -33,8 +33,8 @@ class SpotifyLocalAsync:
                 machine, multiplied by 5.
         """
         self._origin: Dict = DEFAULT_ORIGIN
-        self._loop = loop or asyncio.get_event_loop()
-        self._session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self._loop = loop if loop is not None else asyncio.get_event_loop()
+        self._session: aiohttp.ClientSession = aiohttp.ClientSession(loop=self._loop)
         self._oauth_token = ""
         self._csrf_token = ""
         self._connected = False

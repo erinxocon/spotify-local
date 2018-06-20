@@ -19,17 +19,24 @@
 from spotify_local import SpotifyLocal
 
 
-with SpotifyLocal() as s:
+s = SpotifyLocal()
 
-    @s.on("status_change")
-    def test(status):
-        print(status)
 
-    @s.on("status_change")
-    def test1(status):
-        s.pause()
+@s.on("play_state_change")
+def test(status):
+    print("Play Pause Engaged")
 
-    print(s.listeners("status_change"))
 
-    s.listen_for_events()
+# @s.on("status_change")
+# def test1(status):
+#     print("new status")
 
+
+@s.on("track_change")
+def test2(status):
+    print("track changed")
+
+
+print(s._registered_events)
+
+s.listen_for_events()

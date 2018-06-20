@@ -3,8 +3,8 @@ from collections import defaultdict, OrderedDict
 
 from requests import Session
 
-from ..config import DEFAULT_ORIGIN
-from ..utils import get_url, get_csrf_token, get_oauth_token
+from .config import DEFAULT_ORIGIN
+from .utils import get_url, get_csrf_token, get_oauth_token
 
 
 class SpotifyLocal:
@@ -116,7 +116,7 @@ class SpotifyLocal:
         else:
             keyboard.send("previous track")
 
-    def listen_for_events(self, wait=60) -> None:
+    def listen_for_events(self, wait=60, blocking=True) -> None:
         """Listen for events and call any associated callbacks when there is an event.
         This is a non-blocking operation.
         """

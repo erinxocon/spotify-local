@@ -1,4 +1,3 @@
-from uuid import uuid4
 from collections import defaultdict, OrderedDict
 
 from requests import Session
@@ -38,7 +37,6 @@ class SpotifyLocal:
         return _on
 
     def add_event_handler(self, event, func):
-        uuid = uuid4()
         self._registered_events[event][func] = func
 
     def emit(self, event, *args, **kwargs):
@@ -118,15 +116,37 @@ class SpotifyLocal:
 
     def listen_for_events(self, wait=60, blocking=True) -> None:
         """Listen for events and call any associated callbacks when there is an event.
-        This is a non-blocking operation.
+        This is a blocking operation.
         """
         url = get_url("/remote/status.json")
-        params = {
-            "oauth": self._oauth_token,
-            "csrf": self._csrf_token,
-            "returnon": "login,logout,play,pause,error,ap",
-            "returnafter": wait,
-        }
-        while True:
+
+        def listen_for_status_change():
+            params = {"oauth": self._oauth_token, "csrf": self._csrf_token}
             r = self._request(url=url, params=params)
-            self.emit("status_change", r.json())
+            old = r.json()
+            self.emit("status_change", old)
+            params = {
+                "oauth": self._oauth_token,
+                "csrf": self._csrf_token,
+                "returnon": "play,pause,error,ap",
+                "returnafter": wait,
+            }
+            while True:
+                r = self._request(url=url, params=params)
+                new = r.json()
+
+                if new != old:
+                    self.emit("status_change", new)
+
+                if new["playing"] != old["playing"]:
+                    self.emit("play_state_change", new)
+
+                if (
+                    new["track"]["track_resource"]["uri"]
+                    != old["track"]["track_resource"]["uri"]
+                ):
+                    self.emit("track_change", new)
+
+                old = new
+
+        listen_for_status_change()

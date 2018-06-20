@@ -1,21 +1,3 @@
-# import asyncio
-
-# from spotify_local import SpotifyLocalAsync
-
-
-# ioloop = asyncio.get_event_loop()
-
-
-# async def test():
-#     s = SpotifyLocalAsync(loop=ioloop)
-#     await s.connect()
-#     print(await s.version)
-#     await s.disconnect()
-
-
-# ioloop.run_until_complete(test())
-# ioloop.close()
-
 from spotify_local import SpotifyLocal
 from time import sleep
 
@@ -39,7 +21,7 @@ def test2(status):
 
 print(s._registered_events)
 
-s.listen_for_events(blocking=True)
+s.listen(blocking=True)
 
 print("let's see if this prints out")
 

@@ -31,5 +31,5 @@ def test1(status):
     print(status)
 
 
-s.emit("test", "test")
+print(s.listeners("test"))
 

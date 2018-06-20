@@ -5,7 +5,7 @@ Spotify-Local: A multi-platform API to control the local Spotify Client
     :target: https://pypi.python.org/pypi/spotify-local-control/
 .. image:: https://img.shields.io/pypi/l/requests-xml.svg?maxAge=2592000
     :target: https://opensource.org/licenses/MIT
-    
+
 **Spotify-Local** library is designed to make controlling the Spotify client on your local machine possible!
 This is a wrapper for the web helper process which exposes a simple api.
 **Spotify-Local** is inspired by `SpotifyAPI-NET <https://github.com/JohnnyCrazy/SpotifyAPI-NET>`_.
@@ -69,12 +69,11 @@ Register a callback and listen for events:
 .. code-block:: pycon
 
     >>> from spotify_local import SpotifyLocal
+    >>> s = SpotifyLocal()
+    >>> @s.on('track_change')
     >>> def test(event):
     ...     print(event)
-    >>> s = SpotifyLocal()
-    >>> s.connect()
-    >>> s.on_status_change += test
-    >>> s.listen_for_events()
+    >>> s.listen(blocking=False)
     >>> print("Do more stuff because that runs in the background")
 
 

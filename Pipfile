@@ -10,7 +10,7 @@ pyobjc-framework-Quartz = {version="*", markers="sys_platform == 'dawrin'"}
 aiohttp = "*"
 
 [dev-packages]
-spotify-local = {path = ".", editable = true}
+spotify-local = {editable = true, path = "R:/spotipy-local"}
 mypy = "*"
 rope = "*"
 twine = "*"

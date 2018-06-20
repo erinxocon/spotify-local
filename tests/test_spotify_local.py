@@ -17,7 +17,7 @@
 # ioloop.close()
 
 from spotify_local import SpotifyLocal
-
+from time import sleep
 
 s = SpotifyLocal()
 
@@ -39,4 +39,8 @@ def test2(status):
 
 print(s._registered_events)
 
-s.listen_for_events()
+s.listen_for_events(blocking=True)
+
+print("let's see if this prints out")
+
+sleep(120)

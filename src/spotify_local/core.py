@@ -1,3 +1,6 @@
+import sys
+
+from threading import Thread
 from collections import defaultdict, OrderedDict
 
 from requests import Session
@@ -116,7 +119,6 @@ class SpotifyLocal:
 
     def listen_for_events(self, wait=60, blocking=True) -> None:
         """Listen for events and call any associated callbacks when there is an event.
-        This is a blocking operation.
         """
         url = get_url("/remote/status.json")
 
@@ -149,4 +151,9 @@ class SpotifyLocal:
 
                 old = new
 
-        listen_for_status_change()
+        if blocking:
+            listen_for_status_change()
+        else:
+            thread = Thread(target=listen_for_status_change)
+            thread.daemon = True
+            thread.start()

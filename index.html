@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Spotify-Local-Control: A multi-platform API to control the local Spotify Client &#8212; spotify-local v0.2.3 documentation</title>
+    <title>Spotify-Local: A multi-platform API to control the local Spotify Client &#8212; spotify-local v0.2.3 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -27,15 +27,17 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
-  <div class="section" id="spotify-local-control-a-multi-platform-api-to-control-the-local-spotify-client">
-<h1>Spotify-Local: A multi-platform API to control the local Spotify Client<a class="headerlink" href="#spotify-local-control-a-multi-platform-api-to-control-the-local-spotify-client" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="spotify-local-a-multi-platform-api-to-control-the-local-spotify-client">
+<h1>Spotify-Local: A multi-platform API to control the local Spotify Client<a class="headerlink" href="#spotify-local-a-multi-platform-api-to-control-the-local-spotify-client" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <p><strong>Spotify-Local</strong> library is designed to make controlling the Spotify client on your local machine possible!
 This is a wrapper for the web helper process which exposes a simple api.
-<strong>Spotify-Local-Control</strong> is inspired by <a class="reference external" href="https://github.com/JohnnyCrazy/SpotifyAPI-NET">SpotifyAPI-NET</a>.
+<strong>Spotify-Local</strong> is inspired by <a class="reference external" href="https://github.com/JohnnyCrazy/SpotifyAPI-NET">SpotifyAPI-NET</a>.
 This library allows you to perform simple actions quickly, or listen to events and register callbacks when
 a song changes, or the pause button is pushed.</p>
 <p>When using this library you automatically get:</p>
@@ -48,10 +50,10 @@ a song changes, or the pause button is pushed.</p>
 </div>
 <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ pipenv install spotify-local-control
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>$ pipenv install spotify-local
 </pre></div>
 </div>
-<p>Only <strong>Python 3.6</strong> is supported.</p>
+<p>Only <strong>Python 3.3+</strong> is supported.</p>
 </div>
 <div class="section" id="tutorial-usage">
 <h1>Tutorial &amp; Usage<a class="headerlink" href="#tutorial-usage" title="Permalink to this headline">¶</a></h1>
@@ -79,12 +81,11 @@ a song changes, or the pause button is pushed.</p>
 </div>
 <p>Register a callback and listen for events:</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">spotify_local</span> <span class="kn">import</span> <span class="n">SpotifyLocal</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">SpotifyLocal</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@s.on</span><span class="p">(</span><span class="s1">&#39;track_change&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">print</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span> <span class="o">=</span> <span class="n">SpotifyLocal</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">on_status_change</span> <span class="o">+=</span> <span class="n">test</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">listen_for_events</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="n">blocking</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">print</span><span class="p">(</span><span class="s2">&quot;Do more stuff because that runs in the background&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -101,35 +102,97 @@ a song changes, or the pause button is pushed.</p>
 <dl class="class">
 <dt id="spotify_local.SpotifyLocal">
 <em class="property">class </em><code class="descclassname">spotify_local.</code><code class="descname">SpotifyLocal</code><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal" title="Permalink to this definition">¶</a></dt>
-<dd><p>A basic controller for the local Spotify client.</p>
+<dd><p>Controller for the local spotify web helper, throws events when the
+state of spotify changes.</p>
 <dl class="method">
-<dt id="spotify_local.SpotifyLocal.connect">
-<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.connect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Register the oauth token, the csrf token, and set connected to true</p>
+<dt id="spotify_local.SpotifyLocal.add_event_handler">
+<code class="descname">add_event_handler</code><span class="sig-paren">(</span><em>event</em>, <em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.add_event_handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.add_event_handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add function and event to Ordered Dict</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>event</strong> – Name of the event you wish to register the function</li>
+<li><strong>func</strong> – Function to register witht the associated event</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="spotify_local.SpotifyLocal.disconnect">
-<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.disconnect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.disconnect" title="Permalink to this definition">¶</a></dt>
-<dd><p>Join the process and set the connection to false.</p>
+<dt id="spotify_local.SpotifyLocal.emit">
+<code class="descname">emit</code><span class="sig-paren">(</span><em>event</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.emit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send out an event and call it’s associated functions</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> – Name of the event to trigger</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="spotify_local.SpotifyLocal.get_current_status">
-<code class="descname">get_current_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Mapping<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.get_current_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.get_current_status" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_current_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.get_current_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.get_current_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the current state of the local spotify client</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="spotify_local.SpotifyLocal.listen_for_events">
-<code class="descname">listen_for_events</code><span class="sig-paren">(</span><em>wait: int = 60</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.listen_for_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.listen_for_events" title="Permalink to this definition">¶</a></dt>
+<dt id="spotify_local.SpotifyLocal.listen">
+<code class="descname">listen</code><span class="sig-paren">(</span><em>wait=60</em>, <em>blocking=True</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.listen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.listen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Listen for events and call any associated callbacks when there is an event.
-This is a non-blocking operation.</p>
+There are three events you can subscribe too; <strong>status_change</strong>, <strong>play_state_change</strong>, <strong>track_change</strong></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>wait</strong> – how long to wait for a response before starting a new connection</li>
+<li><strong>blocking</strong> – if listen should block the current process or not</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.listeners">
+<code class="descname">listeners</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.listeners"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.listeners" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of listners associated to a particular event</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> – Name of the event you wish to query</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.on">
+<code class="descname">on</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.on"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator function that adds function to callback list for event system
+There are three events you can subscribe too; <strong>status_change</strong>, <strong>play_state_change</strong>, <strong>track_change</strong>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> – name of the event you wish to register the function under, you can use multiple decorators</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="spotify_local.SpotifyLocal.pause">
-<code class="descname">pause</code><span class="sig-paren">(</span><em>pause=True</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.pause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.pause" title="Permalink to this definition">¶</a></dt>
+<code class="descname">pause</code><span class="sig-paren">(</span><em>pause=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.pause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.pause" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pauses the spotify player</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -143,25 +206,65 @@ This is a non-blocking operation.</p>
 
 <dl class="method">
 <dt id="spotify_local.SpotifyLocal.playURI">
-<code class="descname">playURI</code><span class="sig-paren">(</span><em>uri: str</em><span class="sig-paren">)</span> &#x2192; Mapping<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.playURI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.playURI" title="Permalink to this definition">¶</a></dt>
+<code class="descname">playURI</code><span class="sig-paren">(</span><em>uri</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.playURI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.playURI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>uri</strong> – Playlist, Artist, Album, or Song Uri</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="method">
+<dl class="staticmethod">
 <dt id="spotify_local.SpotifyLocal.previous">
-<code class="descname">previous</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.previous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.previous" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">previous</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.previous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.previous" title="Permalink to this definition">¶</a></dt>
 <dd><p>Goes to the beginning of the track, or if called twice goes to the previous track.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="spotify_local.SpotifyLocal.remove_all_listeners">
+<code class="descname">remove_all_listeners</code><span class="sig-paren">(</span><em>event=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.remove_all_listeners"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.remove_all_listeners" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove all functions for all events, or one event if one is specifed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>event</strong> – Optional event you wish to remove all functions from</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="spotify_local.SpotifyLocal.remove_listener">
+<code class="descname">remove_listener</code><span class="sig-paren">(</span><em>event</em>, <em>func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.remove_listener"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.remove_listener" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove an event listner</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>event</strong> – Event you wish to remove the function from</li>
+<li><strong>func</strong> – Function you wish to remove</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
 <dt id="spotify_local.SpotifyLocal.skip">
-<code class="descname">skip</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.skip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.skip" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="descname">skip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.skip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.skip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Skips the current song</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="spotify_local.SpotifyLocal.unpause">
-<code class="descname">unpause</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.unpause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.unpause" title="Permalink to this definition">¶</a></dt>
+<code class="descname">unpause</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/spotify_local/core.html#SpotifyLocal.unpause"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#spotify_local.SpotifyLocal.unpause" title="Permalink to this definition">¶</a></dt>
 <dd><p>Unpauses the player by calling pause()</p>
 </dd></dl>
 
@@ -186,6 +289,7 @@ This is a non-blocking operation.</p>
 
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">

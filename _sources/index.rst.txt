@@ -3,16 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Spotify-Local-Control: A multi-platform API to control the local Spotify Client
+Spotify-Local: A multi-platform API to control the local Spotify Client
 ===============================================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-**Spotify-Local-Control** library is designed to make controlling the Spotify client on your local machine possible!
+**Spotify-Local** library is designed to make controlling the Spotify client on your local machine possible!
 This is a wrapper for the web helper process which exposes a simple api.
-**Spotify-Local-Control** is inspired by `SpotifyAPI-NET <https://github.com/JohnnyCrazy/SpotifyAPI-NET>`_.
+**Spotify-Local** is inspired by `SpotifyAPI-NET <https://github.com/JohnnyCrazy/SpotifyAPI-NET>`_.
 This library allows you to perform simple actions quickly, or listen to events and register callbacks when
 a song changes, or the pause button is pushed.
 
@@ -29,9 +29,9 @@ Installation
 
 .. code-block:: shell
 
-    $ pipenv install spotify-local-control
+    $ pipenv install spotify-local
 
-Only **Python 3.6** is supported.
+Only **Python 3.3+** is supported.
 
 
 Tutorial & Usage
@@ -73,12 +73,11 @@ Register a callback and listen for events:
 .. code-block:: pycon
 
     >>> from spotify_local import SpotifyLocal
+    >>> s = SpotifyLocal()
+    >>> @s.on('track_change')
     >>> def test(event):
     ...     print(event)
-    >>> s = SpotifyLocal()
-    >>> s.connect()
-    >>> s.on_status_change += test
-    >>> s.listen_for_events()
+    >>> s.listen(blocking=False)
     >>> print("Do more stuff because that runs in the background")
 
 

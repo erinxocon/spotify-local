@@ -27,200 +27,215 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for spotify_local.core</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">sys</span>
 
-<span class="kn">import</span> <span class="nn">keyboard</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span><span class="p">,</span> <span class="n">OrderedDict</span>
 
-<span class="kn">from</span> <span class="nn">random</span> <span class="k">import</span> <span class="n">choices</span>
-<span class="kn">from</span> <span class="nn">string</span> <span class="k">import</span> <span class="n">ascii_lowercase</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
-<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">queues</span><span class="p">,</span> <span class="n">get_context</span>
+<span class="kn">from</span> <span class="nn">requests</span> <span class="k">import</span> <span class="n">Session</span>
 
-<span class="kn">from</span> <span class="nn">requests</span> <span class="k">import</span> <span class="n">session</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Session</span>
-
-<span class="kn">from</span> <span class="nn">.event</span> <span class="k">import</span> <span class="n">Event</span>
-<span class="kn">from</span> <span class="nn">.update_status</span> <span class="k">import</span> <span class="n">UpdateStatus</span>
-
-<span class="k">try</span><span class="p">:</span>
-    <span class="k">assert</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">major</span> <span class="o">==</span> <span class="mi">3</span>
-    <span class="k">assert</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="o">.</span><span class="n">minor</span> <span class="o">&gt;</span> <span class="mi">5</span>
-<span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Spotify-Local-Control requires Python 3.6+!&quot;</span><span class="p">)</span>
-
-
-<span class="n">DEFAULT_ORIGIN</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Origin&quot;</span><span class="p">:</span> <span class="s2">&quot;https://open.spotify.com&quot;</span><span class="p">}</span>
-<span class="n">DEFAULT_PORT</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4381</span>
+<span class="kn">from</span> <span class="nn">.config</span> <span class="k">import</span> <span class="n">DEFAULT_ORIGIN</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="k">import</span> <span class="n">get_url</span><span class="p">,</span> <span class="n">get_csrf_token</span><span class="p">,</span> <span class="n">get_oauth_token</span>
 
 
 <div class="viewcode-block" id="SpotifyLocal"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal">[docs]</a><span class="k">class</span> <span class="nc">SpotifyLocal</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A basic controller for the local Spotify client.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Controller for the local spotify web helper, throws events when the</span>
+<span class="sd">    state of spotify changes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s2">&quot;session&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_origin&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_port&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_connected&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_oauth_token&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_csrf_token&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;_process&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;on_status_change&quot;</span><span class="p">,</span>
-    <span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">:</span> <span class="n">Session</span> <span class="o">=</span> <span class="n">session</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">DEFAULT_ORIGIN</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_PORT</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">:</span> <span class="nb">str</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">:</span> <span class="nb">str</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UpdateStatus</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">on_status_change</span><span class="p">:</span> <span class="n">Event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span> <span class="o">=</span> <span class="n">get_csrf_token</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span> <span class="o">=</span> <span class="n">get_oauth_token</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">Session</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_get_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Ranomdly generates a url for use in requests.</span>
-<span class="sd">        Generates a hostname with the port and the provided suffix url provided</span>
-
-<span class="sd">        :param url: A url fragment to use in the creation of the master url</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">sub</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">.spotilocal.com&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">choices</span><span class="p">(</span><span class="n">ascii_lowercase</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">10</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="s2">&quot;http://</span><span class="si">{0}</span><span class="s2">:</span><span class="si">{1}{2}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">_make_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{})</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{}):</span>
         <span class="sd">&quot;&quot;&quot;Makes a request using the currently open session.</span>
 
 <span class="sd">        :param url: A url fragment to use in the creation of the master url</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">r</span><span class="p">:</span> <span class="n">Response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">DEFAULT_ORIGIN</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span>
 
-    <span class="k">def</span> <span class="nf">_get_oauth_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Retrieve a simple OAuth Token for use with the local http client.&quot;&quot;&quot;</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">/token&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">[</span><span class="s2">&quot;Origin&quot;</span><span class="p">])</span>
-        <span class="n">r</span><span class="p">:</span> <span class="n">Response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;t&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_get_csrf_token</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Retrieve a simple csrf token for to prevent cross site request forgery.&quot;&quot;&quot;</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url</span><span class="p">(</span><span class="s2">&quot;/simplecsrf/token.json&quot;</span><span class="p">)</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">&quot;token&quot;</span><span class="p">]</span>
+<div class="viewcode-block" id="SpotifyLocal.on"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.on">[docs]</a>    <span class="k">def</span> <span class="nf">on</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Decorator function that adds function to callback list for event system</span>
+<span class="sd">        There are three events you can subscribe too; **status_change**, **play_state_change**, **track_change**.</span>
 
-    <span class="k">def</span> <span class="nf">_check_if_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Checks to see if we have connected to the spotify client, essentially a &quot;isSpotifyOpen&quot; check&quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connected</span> <span class="o">==</span> <span class="kc">True</span>
-        <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ConnectionError</span><span class="p">(</span>
-                <span class="s2">&quot;Please either use with context, or call SpotifyLocal.connect() before calling this method.&quot;</span>
-            <span class="p">)</span>
+<span class="sd">        :param event: name of the event you wish to register the function under, you can use multiple decorators</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="SpotifyLocal.connect"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Register the oauth token, the csrf token, and set connected to true&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_oauth_token</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_csrf_token</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_connected</span> <span class="o">=</span> <span class="kc">True</span></div>
+        <span class="k">def</span> <span class="nf">_on</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_event_handler</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">func</span>
 
-<div class="viewcode-block" id="SpotifyLocal.disconnect"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Join the process and set the connection to false.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">should_run</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_connected</span> <span class="o">=</span> <span class="kc">False</span></div>
+        <span class="k">return</span> <span class="n">_on</span></div>
+
+<div class="viewcode-block" id="SpotifyLocal.add_event_handler"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.add_event_handler">[docs]</a>    <span class="k">def</span> <span class="nf">add_event_handler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add function and event to Ordered Dict</span>
+
+<span class="sd">        :param event: Name of the event you wish to register the function</span>
+<span class="sd">        :param func: Function to register witht the associated event</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span><span class="p">[</span><span class="n">event</span><span class="p">][</span><span class="n">func</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span></div>
+
+<div class="viewcode-block" id="SpotifyLocal.emit"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.emit">[docs]</a>    <span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Send out an event and call it&#39;s associated functions</span>
+
+<span class="sd">        :param event: Name of the event to trigger</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span><span class="p">[</span><span class="n">event</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpotifyLocal.remove_listener"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.remove_listener">[docs]</a>    <span class="k">def</span> <span class="nf">remove_listener</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove an event listner</span>
+
+<span class="sd">        :param event: Event you wish to remove the function from</span>
+<span class="sd">        :param func: Function you wish to remove</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span><span class="p">[</span><span class="n">event</span><span class="p">]</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">func</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpotifyLocal.remove_all_listeners"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.remove_all_listeners">[docs]</a>    <span class="k">def</span> <span class="nf">remove_all_listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove all functions for all events, or one event if one is specifed.</span>
+
+<span class="sd">        :param event: Optional event you wish to remove all functions from</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span><span class="p">[</span><span class="n">event</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpotifyLocal.listeners"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.listeners">[docs]</a>    <span class="k">def</span> <span class="nf">listeners</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return list of listners associated to a particular event</span>
+
+<span class="sd">        :param event: Name of the event you wish to query</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_registered_events</span><span class="p">[</span><span class="n">event</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Spotify version information&quot;&quot;&quot;</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url</span><span class="p">(</span><span class="s2">&quot;/service/version.json&quot;</span><span class="p">)</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">get_url</span><span class="p">(</span><span class="s2">&quot;/service/version.json&quot;</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;service&quot;</span><span class="p">:</span> <span class="s2">&quot;remote&quot;</span><span class="p">}</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 
-<div class="viewcode-block" id="SpotifyLocal.get_current_status"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.get_current_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">:</span>
+<div class="viewcode-block" id="SpotifyLocal.get_current_status"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.get_current_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the current state of the local spotify client&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_connected</span><span class="p">()</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url</span><span class="p">(</span><span class="s2">&quot;/remote/status.json&quot;</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">get_url</span><span class="p">(</span><span class="s2">&quot;/remote/status.json&quot;</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;oauth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">,</span> <span class="s2">&quot;csrf&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">}</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="SpotifyLocal.pause"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.pause">[docs]</a>    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pause</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SpotifyLocal.pause"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.pause">[docs]</a>    <span class="k">def</span> <span class="nf">pause</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pause</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Pauses the spotify player</span>
 
 <span class="sd">        :param pause: boolean value to choose the pause/play state</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_connected</span><span class="p">()</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url</span><span class="p">(</span><span class="s2">&quot;/remote/pause.json&quot;</span><span class="p">)</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">get_url</span><span class="p">(</span><span class="s2">&quot;/remote/pause.json&quot;</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;oauth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">,</span>
             <span class="s2">&quot;csrf&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">,</span>
             <span class="s2">&quot;pause&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">pause</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span><span class="p">,</span>
         <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpotifyLocal.unpause"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.unpause">[docs]</a>    <span class="k">def</span> <span class="nf">unpause</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SpotifyLocal.unpause"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.unpause">[docs]</a>    <span class="k">def</span> <span class="nf">unpause</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Unpauses the player by calling pause()&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pause</span><span class="p">(</span><span class="n">pause</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpotifyLocal.playURI"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.playURI">[docs]</a>    <span class="k">def</span> <span class="nf">playURI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mapping</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_connected</span><span class="p">()</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url</span><span class="p">(</span><span class="s2">&quot;/remote/play.json&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="SpotifyLocal.playURI"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.playURI">[docs]</a>    <span class="k">def</span> <span class="nf">playURI</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">uri</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K</span>
+
+<span class="sd">        :param uri: Playlist, Artist, Album, or Song Uri</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">get_url</span><span class="p">(</span><span class="s2">&quot;/remote/play.json&quot;</span><span class="p">)</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;oauth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">,</span>
             <span class="s2">&quot;csrf&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">,</span>
             <span class="s2">&quot;uri&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">,</span>
             <span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="n">uri</span><span class="p">,</span>
         <span class="p">}</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="SpotifyLocal.skip"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.skip">[docs]</a>    <span class="k">def</span> <span class="nf">skip</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SpotifyLocal.skip"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.skip">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">skip</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Skips the current song&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
             <span class="n">keyboard</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;KEYTYPE_SKIP&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">keyboard</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;next track&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpotifyLocal.previous"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.previous">[docs]</a>    <span class="k">def</span> <span class="nf">previous</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SpotifyLocal.previous"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.previous">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">previous</span><span class="p">():</span>
         <span class="sd">&quot;&quot;&quot;Goes to the beginning of the track, or if called twice goes to the previous track.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span><span class="p">:</span>
             <span class="n">keyboard</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;KEYTYPE_PREVIOUS&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">keyboard</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;previous track&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SpotifyLocal.listen_for_events"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.listen_for_events">[docs]</a>    <span class="k">def</span> <span class="nf">listen_for_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">60</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="SpotifyLocal.listen"><a class="viewcode-back" href="../../index.html#spotify_local.SpotifyLocal.listen">[docs]</a>    <span class="k">def</span> <span class="nf">listen</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wait</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Listen for events and call any associated callbacks when there is an event.</span>
-<span class="sd">        This is a non-blocking operation.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_connected</span><span class="p">()</span>
-        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_url</span><span class="p">(</span><span class="s2">&quot;/remote/status.json&quot;</span><span class="p">)</span>
-        <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;oauth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">,</span> <span class="s2">&quot;csrf&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span> <span class="o">=</span> <span class="n">UpdateStatus</span><span class="p">(</span>
-            <span class="n">handlers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">on_status_change</span><span class="p">,</span>
-            <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">,</span>
-            <span class="n">headers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">,</span>
-            <span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
-            <span class="n">wait</span><span class="o">=</span><span class="n">wait</span><span class="p">,</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div></div>
+<span class="sd">        There are three events you can subscribe too; **status_change**, **play_state_change**, **track_change**</span>
 
+<span class="sd">        :param wait: how long to wait for a response before starting a new connection</span>
+<span class="sd">        :param blocking: if listen should block the current process or not</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">get_url</span><span class="p">(</span><span class="s2">&quot;/remote/status.json&quot;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">listen_for_status_change</span><span class="p">():</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;oauth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">,</span> <span class="s2">&quot;csrf&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">}</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+            <span class="n">old</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;status_change&quot;</span><span class="p">,</span> <span class="n">old</span><span class="p">)</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;oauth&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oauth_token</span><span class="p">,</span>
+                <span class="s2">&quot;csrf&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csrf_token</span><span class="p">,</span>
+                <span class="s2">&quot;returnon&quot;</span><span class="p">:</span> <span class="s2">&quot;play,pause,error,ap&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;returnafter&quot;</span><span class="p">:</span> <span class="n">wait</span><span class="p">,</span>
+            <span class="p">}</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+                <span class="n">new</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">new</span> <span class="o">!=</span> <span class="n">old</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;status_change&quot;</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">new</span><span class="p">[</span><span class="s2">&quot;playing&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">old</span><span class="p">[</span><span class="s2">&quot;playing&quot;</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;play_state_change&quot;</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="n">new</span><span class="p">[</span><span class="s2">&quot;track&quot;</span><span class="p">][</span><span class="s2">&quot;track_resource&quot;</span><span class="p">][</span><span class="s2">&quot;uri&quot;</span><span class="p">]</span>
+                    <span class="o">!=</span> <span class="n">old</span><span class="p">[</span><span class="s2">&quot;track&quot;</span><span class="p">][</span><span class="s2">&quot;track_resource&quot;</span><span class="p">][</span><span class="s2">&quot;uri&quot;</span><span class="p">]</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="s2">&quot;track_change&quot;</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+
+                <span class="n">old</span> <span class="o">=</span> <span class="n">new</span>
+
+        <span class="k">if</span> <span class="n">blocking</span><span class="p">:</span>
+            <span class="n">listen_for_status_change</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">thread</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">listen_for_status_change</span><span class="p">)</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div></div>
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">

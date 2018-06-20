@@ -1,1 +1,0 @@
-Changed project name from "Spotify-Local-Control" to "Spotify-Local"

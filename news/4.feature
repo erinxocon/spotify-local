@@ -1,1 +1,0 @@
-`listen_for_events` can now be blocking or non-blocking

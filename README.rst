@@ -27,7 +27,7 @@ Installation
 
     $ pipenv install spotify-local-control
 
-Only **Python 3.6** is supported.
+Only **Python 3.3+** is supported.
 
 
 Tutorial & Usage

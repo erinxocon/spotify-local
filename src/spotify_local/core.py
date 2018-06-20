@@ -28,6 +28,7 @@ class SpotifyLocal:
 
     def _request(self, url, params={}):
         """Makes a request using the currently open session.
+
         :param url: A url fragment to use in the creation of the master url
         """
         r = self._session.get(url=url, params=params, headers=DEFAULT_ORIGIN)
@@ -38,10 +39,8 @@ class SpotifyLocal:
 
     def on(self, event):
         """Decorator function that adds function to callback list for event system
-        There are three events you can subscribe too:
-            - status_change
-            - play_state_change
-            - track_change
+        There are three events you can subscribe too; **status_change**, **play_state_change**, **track_change**.
+
         :param event: name of the event you wish to register the function under, you can use multiple decorators
         """
 
@@ -53,6 +52,7 @@ class SpotifyLocal:
 
     def add_event_handler(self, event, func):
         """Add function and event to Ordered Dict
+
         :param event: Name of the event you wish to register the function
         :param func: Function to register witht the associated event
         """
@@ -60,6 +60,7 @@ class SpotifyLocal:
 
     def emit(self, event, *args, **kwargs):
         """Send out an event and call it's associated functions
+
         :param event: Name of the event to trigger
         """
         for func in self._registered_events[event].values():
@@ -67,6 +68,7 @@ class SpotifyLocal:
 
     def remove_listener(self, event, func):
         """Remove an event listner
+
         :param event: Event you wish to remove the function from
         :param func: Function you wish to remove
         """
@@ -74,6 +76,7 @@ class SpotifyLocal:
 
     def remove_all_listeners(self, event=None):
         """Remove all functions for all events, or one event if one is specifed.
+
         :param event: Optional event you wish to remove all functions from
         """
         if event is not None:
@@ -83,6 +86,7 @@ class SpotifyLocal:
 
     def listeners(self, event):
         """Return list of listners associated to a particular event
+
         :param event: Name of the event you wish to query
         """
         return list(self._registered_events[event].keys())
@@ -104,6 +108,7 @@ class SpotifyLocal:
 
     def pause(self, pause=True):
         """Pauses the spotify player
+
         :param pause: boolean value to choose the pause/play state
         """
         url: str = get_url("/remote/pause.json")
@@ -119,7 +124,10 @@ class SpotifyLocal:
         self.pause(pause=False)
 
     def playURI(self, uri):
-        """Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K"""
+        """Play a Spotify uri, for example spotify:track:5Yn8WCB4Dqm8snemB5Mu4K
+
+        :param uri: Playlist, Artist, Album, or Song Uri
+        """
         url: str = get_url("/remote/play.json")
         params = {
             "oauth": self._oauth_token,
@@ -148,10 +156,7 @@ class SpotifyLocal:
 
     def listen(self, wait=60, blocking=True) -> None:
         """Listen for events and call any associated callbacks when there is an event.
-        There are three events you can subscribe too:
-            - status_change
-            - play_state_change
-            - track_change
+        There are three events you can subscribe too; **status_change**, **play_state_change**, **track_change**
 
         :param wait: how long to wait for a response before starting a new connection
         :param blocking: if listen should block the current process or not

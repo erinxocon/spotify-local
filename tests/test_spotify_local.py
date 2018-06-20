@@ -18,18 +18,18 @@
 
 from spotify_local import SpotifyLocal
 
-s = SpotifyLocal()
 
+with SpotifyLocal() as s:
 
-@s.on("test")
-def test(status):
-    print(status)
+    @s.on("status_change")
+    def test(status):
+        print(status)
 
+    @s.on("status_change")
+    def test1(status):
+        s.pause()
 
-@s.on("test")
-def test1(status):
-    print(status)
+    print(s.listeners("status_change"))
 
-
-print(s.listeners("test"))
+    s.listen_for_events()
 

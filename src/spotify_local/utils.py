@@ -1,6 +1,8 @@
+import os
 import sys
 
 import psutil
+import delegator
 
 from random import choices
 from string import ascii_lowercase
@@ -40,10 +42,44 @@ def is_spotify_running():
     procs = [p.name() for p in psutil.process_iter()]
     if sys.platform == "win32":
         return "Spotify.exe" in procs
+    else:
+        return "Spotify" in procs
 
 
 def is_spotify_web_helper_running():
     procs = [p.name() for p in psutil.process_iter()]
     if sys.platform == "win32":
         return "SpotifyWebHelper.exe" in procs
+    else:
+        return "SpotifyWebHelper" in procs
 
+
+def start_spotify_web_helper():
+    # windows: %APPDATA%\Spotify\SpotifyWebHelper.exe
+    # macOS: /Users/user/Library/Application Support/Spotify/SpotifyWebHelper
+
+    if sys.platform == "win32":
+        appdata = os.environ["APPDATA"]
+        path = os.path.join(appdata, "Spotify", "SpotifyWebHelper.exe")
+        delegator.run(path, block=False)
+
+    elif sys.platform == "darwin":
+        home = os.environ["HOME"]
+        path = os.path.join(
+            home, "Library", "Application Support", "Spotify", "SpotifyWebHelper"
+        )
+        delegator.run(path, block=False)
+
+
+def start_spotify():
+    if sys.platform == "win32":
+        appdata = os.environ["APPDATA"]
+        path = os.path.join(appdata, "Spotify", "Spotify.exe")
+        delegator.run(path, block=False)
+
+    # elif sys.platform == "darwin":
+    #     home = os.environ["HOME"]
+    #     path = os.path.join(
+    #         home, "Library", "Application Support", "Spotify", "Spotify"
+    #     )
+    #     delegator.run(path, block=False)

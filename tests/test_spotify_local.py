@@ -1,5 +1,7 @@
 from spotify_local import (
     SpotifyLocal,
+    start_spotify,
+    start_spotify_web_helper,
     is_spotify_running,
     is_spotify_web_helper_running,
 )
@@ -34,3 +36,5 @@ from time import sleep
 
 print(is_spotify_running())
 print(is_spotify_web_helper_running())
+# start_spotify_web_helper()
+start_spotify()

@@ -154,7 +154,7 @@ class SpotifyLocal:
         else:
             keyboard.send("previous track")
 
-    def listen(self, wait=60, blocking=True) -> None:
+    def listen(self, wait=60, blocking=True):
         """Listen for events and call any associated callbacks when there is an event.
         There are three events you can subscribe too; **status_change**, **play_state_change**, **track_change**
 

@@ -25,7 +25,7 @@ Installation
 
 .. code-block:: shell
 
-    $ pipenv install spotify-local-control
+    $ pipenv install spotify-local
 
 Only **Python 3.3+** is supported.
 

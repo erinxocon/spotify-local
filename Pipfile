@@ -9,6 +9,7 @@ keyboard = "*"
 pyobjc-framework-Quartz = {version="*", markers="sys_platform == 'dawrin'"}
 pywin32 = {version="*", markers="sys_platform == 'win32'"}
 psutil = "*"
+"delegator.py" = "*"
 
 [dev-packages]
 spotify-local = {editable = true, path = "R:/spotipy-local"}
@@ -18,7 +19,6 @@ twine = "*"
 white = "*"
 sphinx = "*"
 towncrier = "*"
-ipython = "*"
 
 [requires]
 python_version = "3.6"

@@ -4,7 +4,7 @@ try:
     assert sys.version_info.major == 3
     assert sys.version_info.minor > 2
 except AssertionError:
-    raise RuntimeError("Spotify-Local requires Python 3.6+!")
+    raise RuntimeError("Spotify-Local requires Python 3.3+!")
 
 from .core import SpotifyLocal
 from .utils import (

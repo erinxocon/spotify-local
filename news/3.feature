@@ -1,0 +1,1 @@
+Added decorators for track_change, status_change, and play_state_change, so the user doesn't have to type them out manually

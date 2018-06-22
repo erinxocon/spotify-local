@@ -37,15 +37,32 @@ class SpotifyLocal:
     def close(self):
         self._session.close()
 
-    def on(self, event):
-        """Decorator function that adds function to callback list for event system
-        There are three events you can subscribe too; **status_change**, **play_state_change**, **track_change**.
-
-        :param event: name of the event you wish to register the function under, you can use multiple decorators
-        """
+    @property
+    def on_status_change(self):
+        """Decorator function that adds associated callbacl to list for when a status change is detected"""
 
         def _on(func):
-            self.add_event_handler(event, func)
+            self.add_event_handler("status_change", func)
+            return func
+
+        return _on
+
+    @property
+    def on_track_change(self):
+        """Decorator function that adds associated callbacl to list for when a track change is detected"""
+
+        def _on(func):
+            self.add_event_handler("track_change", func)
+            return func
+
+        return _on
+
+    @property
+    def on_play_state_change(self):
+        """Decorator function that adds associated callback to list for when a play state change is detected"""
+
+        def _on(func):
+            self.add_event_handler("play_state_change", func)
             return func
 
         return _on

@@ -37,6 +37,7 @@ class SpotifyLocal:
     def close(self):
         self._session.close()
 
+    @property
     def on_status_change(self):
         """Decorator function that adds associated callbacl to list for when a status change is detected"""
 
@@ -46,6 +47,7 @@ class SpotifyLocal:
 
         return _on
 
+    @property
     def on_track_change(self):
         """Decorator function that adds associated callbacl to list for when a track change is detected"""
 
@@ -55,6 +57,7 @@ class SpotifyLocal:
 
         return _on
 
+    @property
     def on_play_state_change(self):
         """Decorator function that adds associated callback to list for when a play state change is detected"""
 

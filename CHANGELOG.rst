@@ -1,3 +1,15 @@
+0.3.2 (2018-06-21)
+==================
+
+Features
+--------
+
+- You can now check if spotify and it's web helper are running and if not start
+  them! (#2)
+- Added decorators for track_change, status_change, and play_state_change, so
+  the user doesn't have to type them out manually (#3)
+
+
 0.3.0 (2018-06-20)
 ==================
 

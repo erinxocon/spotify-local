@@ -1,1 +1,0 @@
-You can now check if spotify and it's web helper are running and if not start them!

@@ -1,9 +1,9 @@
 Spotify-Local: A multi-platform API to control the local Spotify Client
 ===============================================================================
 
-.. image:: https://img.shields.io/pypi/v/requests-xml.svg?maxAge=2592000
-    :target: https://pypi.python.org/pypi/spotify-local-control/
-.. image:: https://img.shields.io/pypi/l/requests-xml.svg?maxAge=2592000
+.. image:: https://img.shields.io/pypi/v/spotify-local.svg?maxAge=2592000
+    :target: https://pypi.python.org/pypi/spotify-local/
+.. image:: https://img.shields.io/pypi/l/spotify-local.svg?maxAge=2592000
     :target: https://opensource.org/licenses/MIT
 
 **Spotify-Local** library is designed to make controlling the Spotify client on your local machine possible!

@@ -11,7 +11,7 @@ from requests import Response, session, Session
 
 from .config import DEFAULT_PORT, DEFAULT_ORIGIN
 
-s: Session = session()
+s: Session = Session()
 
 
 def get_url(url):

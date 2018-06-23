@@ -43,7 +43,6 @@ REQUIRED = [
     "requests",
     "keyboard",
     "pyobjc-framework-Quartz; sys.platform == 'darwin'",
-    "aiohttp",
 ]
 
 

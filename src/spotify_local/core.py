@@ -1,12 +1,12 @@
 import sys
-
+from collections import OrderedDict, defaultdict
 from threading import Thread
-from collections import defaultdict, OrderedDict
 
+import keyboard
 from requests import Session
 
 from .config import DEFAULT_ORIGIN
-from .utils import get_url, get_csrf_token, get_oauth_token
+from .utils import get_csrf_token, get_oauth_token, get_url
 
 
 class SpotifyLocal:
@@ -146,12 +146,7 @@ class SpotifyLocal:
         :param uri: Playlist, Artist, Album, or Song Uri
         """
         url: str = get_url("/remote/play.json")
-        params = {
-            "oauth": self._oauth_token,
-            "csrf": self._csrf_token,
-            "uri": uri,
-            "context": uri,
-        }
+        params = {"oauth": self._oauth_token, "csrf": self._csrf_token, "uri": uri, "context": uri}
         r = self._request(url=url, params=params)
         return r.json()
 
@@ -201,10 +196,7 @@ class SpotifyLocal:
                 if new["playing"] != old["playing"]:
                     self.emit("play_state_change", new)
 
-                if (
-                    new["track"]["track_resource"]["uri"]
-                    != old["track"]["track_resource"]["uri"]
-                ):
+                if new["track"]["track_resource"]["uri"] != old["track"]["track_resource"]["uri"]:
                     self.emit("track_change", new)
 
                 old = new

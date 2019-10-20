@@ -1,3 +1,7 @@
+**Spotify has replaced most of this functionality with the web api.  This project is no longer maintained!**
+
+
+
 Spotify-Local: A multi-platform API to control the local Spotify Client
 ===============================================================================
 

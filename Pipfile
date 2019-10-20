@@ -6,18 +6,12 @@ name = "pypi"
 [packages]
 requests = "*"
 keyboard = "*"
-pyobjc-framework-Quartz = {version="*", markers="sys_platform == 'dawrin'"}
+pyobjc-framework-Quartz = {version = "*",markers = "sys_platform == 'dawrin'"}
 psutil = "*"
 "delegator.py" = "*"
 
 [dev-packages]
-spotify-local = {editable = true, path = "R:/spotipy-local"}
-mypy = "*"
-rope = "*"
-twine = "*"
-white = "*"
-sphinx = "*"
-towncrier = "*"
+flit = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
